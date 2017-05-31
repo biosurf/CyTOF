@@ -35,8 +35,8 @@ if (r == "a") {
 }
   
 #### SOURCE FUNCTIONS
-source("~/Dropbox/Research/Projects/Ongoing/spectral_overlapper/functions/emission_recalc.R")
-source("~/Dropbox/Research/Projects/Ongoing/spectral_overlapper/functions/overlap_dist.R")
+source("~/Dropbox/Git_repos/flow/emission_recalc.R")
+source("~/Dropbox/Git_repos/flow/overlap_dist.R")
 
 #### RE_CALCULATE EMISSION BASED ON LASERS
 spectra <- emission_recalc(lasers, markers, c)

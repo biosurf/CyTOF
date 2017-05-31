@@ -6,7 +6,7 @@
 overlap <- function(n, s, l, r, plot) {
   if (r == "b") {
     suppressWarnings(library(matrixStats))
-    source("~/Dropbox/Research/Projects/Ongoing/spectral_overlapper/functions/wavelength_to_rgb.R")
+    source("~/Dropbox/Git_repos/flow/wavelength_to_rgb.R")
     
     # Calculate auc for each fluorophore [CAN BE PRE-CALCULATED]
     auc_spectra <- list()

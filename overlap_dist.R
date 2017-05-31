@@ -7,7 +7,7 @@ overlap <- function(n, s, l, r, plot) {
   if (r == "b") {
     # for (n in 2:16) {
     suppressWarnings(library(matrixStats))
-    source("~/Dropbox/Research/Projects/Ongoing/spectral_overlapper/functions/wavelength_to_rgb.R")
+    source("~/Dropbox/Git_repos/flow/wavelength_to_rgb.R")
     
     auc_spectra <- list()
     for(i in 1:(length(s))) {
