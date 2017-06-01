@@ -3,7 +3,7 @@
 # c = 0.2
 
 emission_recalc <- function(l, m, c) {
-  load("~/Dropbox/Git_repos/flow/fluorochromes_all.Rdata")
+  load("~/Dropbox/Git_repos/biosurf/flow/fluorochromes_all.Rdata")
   f_sub <- list()
   peak_wl <- c()
   

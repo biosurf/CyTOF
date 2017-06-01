@@ -35,8 +35,8 @@ if (r == "a") {
 }
   
 #### SOURCE FUNCTIONS
-source("~/Dropbox/Git_repos/flow/emission_recalc.R")
-source("~/Dropbox/Git_repos/flow/overlap_dist.R")
+source("~/Dropbox/Git_repos/biosurf/flow/emission_recalc.R")
+source("~/Dropbox/Git_repos/biosurf/flow/overlap_dist.R")
 
 #### RE_CALCULATE EMISSION BASED ON LASERS
 spectra <- emission_recalc(lasers, markers, c)
