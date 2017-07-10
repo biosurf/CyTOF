@@ -96,7 +96,7 @@ plot_beads = function(data, channels, gating, filename, directory, plot) {
 }
 
 
-#### Smmothing beads in windows ####
+#### Smoothing beads in windows ####
 smooth_beads = function(window_size, file_bead_data) {
   
   num_events = nrow(file_bead_data)
@@ -106,7 +106,7 @@ smooth_beads = function(window_size, file_bead_data) {
     smoothed_time = matrix(0,nrow=(num_events-window_size),ncol=1)
     
     for (i in 1:(num_events-window_size)) {
-      smoothed_beads[i,] = colMedians(file_bead_data[i:(i+window_size-1),2:(n_beadchannels+1)])   # Here, the original code does not subtract 1 from the window size. I do it because it is supposed to be a 200-bead window (not a 201-bead window). It propably does not make a large difference.
+      smoothed_beads[i,] = colMedians(file_bead_data[i:(i+window_size-1),2:(n_beadchannels+1)])   # Here, the original code does not subtract 1 from the window size. I do it because it is supposed to be a 200-bead window (not a 201-bead window). It probably does not make a large difference.
       smoothed_time[i] = median(file_bead_data[i:(i+window_size-1),1])
     }
 
