@@ -124,7 +124,6 @@ for(c in 1:length(pregating_channels)) {
 }
 
 
-
 # Create two toy batches of bimodal densities (the cydar packages only takes lists of lists as input)
 batches <- list()
 x <- list()
@@ -140,7 +139,6 @@ batches[["Batch2"]] <- x
 # Plot the marker distributions
 plot(density(batches$Batch1$sample_Y), main="uncorrected samples", ylim=c(0,0.09))
 points(density(batches$Batch2$sample_Y), type="l", col="red")
-
 
 
 # Run the normalization
@@ -235,7 +233,6 @@ live <- singlets[singlets[,"Dead"] < right,]
 paste("Live intact singlets: ", round((nrow(live)/nrow(singlets))*100, digits=2), "%", sep="")
 
 
-
 for (i in fcs_files) {
   print(paste("Total recovery for ", i, ": ", round((nrow(live[live$sample==i,])/nrow(exprs_set_trans[exprs_set_trans$sample==i,]))*100, digits=2), "%", sep=""))
 }
@@ -262,12 +259,10 @@ table(duplicated(live[live$sample==fcs_files[1],lineage_channels]))
 live <- live[-which(duplicated(live[live$sample==fcs_files[1],lineage_channels]))]
 
 
-
 library(Rtsne)
 set.seed(42)
 tsne <- Rtsne(live[live$sample==fcs_files[1],lineage_channels])
 plot(tsne$Y[,1:2], pch=21, bg=alpha("slategray4",0.6), col="grey", xlab="", ylab="", lwd=0.5)
-
 
 
 par(mfrow=c(2,2))
@@ -287,19 +282,16 @@ library(cytofkit)
 clusters_pg <- cytof_cluster(xdata = live[live$sample==fcs_files[1],lineage_channels], method = "Rphenograph")
 
 
-
 # Visualize results on PCA
 getPalette = colorRampPalette(brewer.pal(9, "Set1"))
 cols <- getPalette(max(clusters_pg))
 plot(pca$x[,1:2], pch=21, bg=alpha(col=cols[clusters_pg],0.6), col="grey")
 
 
-
 # Visualize results on t-SNE plot
 getPalette = colorRampPalette(brewer.pal(9, "Set1"))
 cols <- getPalette(max(clusters_pg))
 plot(tsne$Y[,1:2], pch=21, bg=alpha(col=cols[clusters_pg],0.6), col="grey", xlab="", ylab="", lwd=0.5)
-
 
 
 # Sample 5000 random events from each sample
@@ -332,7 +324,6 @@ for(i in 1:4) {
 
 library(cytofkit)
 clusters_fc <- cytof_cluster(xdata = live[live$sample==fcs_files[1],lineage_channels], method = "FlowSOM", FlowSOM_k=25)
-
 
 
 # Visualize results on t-SNE plot
@@ -373,7 +364,6 @@ par(mar = c(2,2,2,2))
 heatmap.2(t(cluster_matrix), col=cols, trace="none", density.info = "none", sepcolor = "white", sepwidth = c(0.001, 0.001), colsep=c(1:ncol(t(cluster_matrix))), rowsep=c(1:nrow(t(cluster_matrix))), xlab="cluster", ylab="channel")
 
 
-
 # Load MEM library
 library(MEM)
 # Calculation of relative enrichment scores for each marker on each population using asinh transformation with co-factor 5
@@ -396,7 +386,6 @@ layout(matrix(c(1,1,1,2), nrow=1,ncol=4))
 plot(cell.rv, point.shape=19, point.color=alpha(cols[clusters], 0.6))
 plot.new()
 legend("center", legend=paste("cluster", 1:max(clusters)), col=cols, cex=1, pch=16, bty='n')
-
 
 
 pop.rv <- do.radviz(cluster_matrix,cell.S)
@@ -495,34 +484,3 @@ library(igraph)
 graph  <- graph.adjacency(as.matrix(dist(som$codes[[1]])), weighted = TRUE)
 mst <- mst(graph)
 plot(as.undirected(mst), vertex.size=10, mode="undirected")
-
-
-#############
-### SPADE ###
-#############
-
-# Installing and loading required packages
-require(devtools) || install.packages("devtools")
-devtools::install_github("nolanlab/Rclusterpp")
-source("http://bioconductor.org/biocLite.R")
-devtools::install_github("nolanlab/spade")
-library(spade)
-library(flowCore)
-
-# Setting working directory to file location and point out the input file
-setwd("~/Desktop/")
-filename = "Bendall_et_al_Science_2011_Marrow_1_SurfacePanel_Live_CD44pos_Singlets.fcs"
-
-# Choosing the markers to include in clustering
-markers <- c("Cd(110,111,112,114)","Cell_length","Dy(163.929)-Dual","Er(165.930)-Dual","Er(166.932)-Dual","Er(167.932)-Dual","Er(169.935)-Dual","Eu(150.919)-Dual","Eu(152.921)-Dual","Gd(155.922)-Dual","Gd(157.924)-Dual","Gd(159.927)-Dual","Ho(164.930)-Dual","In(114.903)-Dual","Ir(190.960)-Dual","La(138.906)-Dual","Lu(174.940)-Dual","Nd(141.907)-Dual","Nd(143.910)-Dual","Nd(144.912)-Dual","Nd(145.913)-Dual","Nd(147.916)-Dual","Nd(149.920)-Dual","Pr(140.907)-Dual","Sm(146.914)-Dual","Sm(151.919)-Dual","Sm(153.922)-Dual","Tb(158.925)-Dual","Tm(168.934)-Dual","Yb(170.936)-Dual","Yb(171.936)-Dual","Yb(173.938)-Dual","Yb(175.942)-Dual")
-PANELS <- list(list(panel_files=c(filename), median_cols=NULL,reference_files=c(filename),fold_cols=c()))
-
-# Building CytoSPADE trees (this may take a while)
-# Remember to set the number of clusters, "k", and the number of events to keep after downsampling, "clustering_samples"
-# Also decide if you want to transform the data and the co-factor @Lars, what is b here???
-SPADE.driver(filename, out_dir="output", cluster_cols=markers, panels=PANELS, transforms=flowCore::arcsinhTransform(a=0, b=0.2), layout=SPADE.layout.arch, downsampling_target_percent=0.1, downsampling_target_number=NULL, downsampling_target_pctile=NULL, downsampling_exclude_pctile=0.01, k=200, clustering_samples=50000)
-
-# Generating PDFs of the SPADE trees
-layout <- read.table(file.path("output","layout.table"))
-mst <- read.graph(file.path("output","mst.gml"),format="gml")
-SPADE.plot.trees(mst,"output",file_pattern="*fcs*Rsave",layout=as.matrix(layout),out_dir=file.path("output","pdf"),size_scale_factor=1.2)
