@@ -25,6 +25,8 @@ dir.create("./combined")
 cytofCore.concatenateDirectoryFiles(inputDir="./",outputDir="./combined",pattern=NULL,overwrite=F,timeParam="time")
 
 
+
+
 #####################
 ### Randomization ###
 #####################
@@ -32,6 +34,8 @@ cytofCore.concatenateDirectoryFiles(inputDir="./",outputDir="./combined",pattern
 # Check if counts are randomized
 
 # Revert back to original count
+
+
 
 
 
@@ -50,6 +54,7 @@ if (v < 3) {xt[xt<0] <- 0}
 
 
 
+
 # Transformation by channel
 xx <- melt(expr_count[1:2000,])
 colnames(xx) <- c("Marker", "Intensity")
@@ -58,6 +63,8 @@ ggplot(xx, aes(x=Marker, y=Intensity)) + geom_boxplot() + ggtitle("Raw")
 xx <- melt(asinh(expr_count[1:2000,]/5))
 colnames(xx) <- c("Marker", "Intensity")
 ggplot(xx, aes(x=Marker, y=Intensity)) + geom_boxplot() + ggtitle("ArcSinh transformed")
+
+
 
 
 ##################
@@ -87,6 +94,7 @@ text((left+(right-left)/2),(lower+(upper-lower)/2)-2, paste("cells: ", round((nr
 
 
 
+
 # Gate for intact cells
 x <- names(markers)[grep(dna2, names(markers), ignore.case = TRUE)]
 y <- names(markers)[grep(dna1, names(markers), ignore.case = TRUE)]
@@ -103,6 +111,7 @@ rect(left,lower,right,upper,border="red")
 xt_intact <- xt_cells[xt_cells[,x] > left & xt_cells[,x] < right,]; xt_intact <- xt_intact[xt_intact[,y] > lower & xt_intact[,y] < upper,]
 paste("intact cells: ", round((nrow(xt_intact)/nrow(xt_cells))*100, digits=2), "%", sep="")
 text((left+(right-left)/2),(lower+(upper-lower)/2)-2, paste("intact cells: ", round((length(xt_intact)/length(xt_cells))*100, digits=2), "%", sep=""), col="red")
+
 
 
 
@@ -125,6 +134,7 @@ text((left+(right-left)/2),(lower+(upper-lower)/2-1),paste("intact singlets: ", 
 
 
 
+
 # Gate for live
 x <- names(markers)[grep(dead, names(markers), ignore.case = TRUE)]
 y <- names(markers)[grep(dna1, names(markers), ignore.case = TRUE)]
@@ -144,11 +154,14 @@ text((left+(right-left)/2),(lower+(upper-lower)/2-1),paste("live intact singlets
 
 
 
+
 paste("Total recovery: ", round((nrow(xt_live_intact_singlets)/nrow(xt))*100, digits=2), "%", sep="")
 
 # Save FCS containing live intact singlets
 ff2 <- flowFrame(xt_live_intact_singlets, ff@parameters, ff@description)
 suppressWarnings(write.FCS(ff2, filename = paste("./",  file, "live_intact_singlets", sep=""), what="numeric", delimiter = "\\"))
+
+
 
 
 ##############
@@ -162,6 +175,8 @@ optim.cell <- do.optim(cell.S,cell.sim,iter=100,n=1000)
 cell.S <- make.S(tail(optim.cell$best,1)[[1]])
 cell.rv <- do.radviz(expr_norm,cell.S)
 plot(cell.rv, point.shape=19, point.color=cols[pd_new$cluster[!is.na(pd_new$cluster)]])
+
+
 
 
 ###########
