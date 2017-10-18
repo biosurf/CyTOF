@@ -25,6 +25,7 @@ dir.create("./combined")
 cytofCore.concatenateDirectoryFiles(inputDir="./",outputDir="./combined",pattern=NULL,overwrite=F,timeParam="time")
 
 
+
 #####################
 ### Randomization ###
 #####################
@@ -32,6 +33,7 @@ cytofCore.concatenateDirectoryFiles(inputDir="./",outputDir="./combined",pattern
 # Check if counts are randomized
 
 # Revert back to original count
+
 
 
 
@@ -58,6 +60,7 @@ ggplot(xx, aes(x=Marker, y=Intensity)) + geom_boxplot() + ggtitle("Raw")
 xx <- melt(asinh(expr_count[1:2000,]/5))
 colnames(xx) <- c("Marker", "Intensity")
 ggplot(xx, aes(x=Marker, y=Intensity)) + geom_boxplot() + ggtitle("ArcSinh transformed")
+
 
 
 ##################
@@ -151,6 +154,7 @@ ff2 <- flowFrame(xt_live_intact_singlets, ff@parameters, ff@description)
 suppressWarnings(write.FCS(ff2, filename = paste("./",  file, "live_intact_singlets", sep=""), what="numeric", delimiter = "\\"))
 
 
+
 ##############
 ### Radviz ###
 ##############
@@ -162,6 +166,7 @@ optim.cell <- do.optim(cell.S,cell.sim,iter=100,n=1000)
 cell.S <- make.S(tail(optim.cell$best,1)[[1]])
 cell.rv <- do.radviz(expr_norm,cell.S)
 plot(cell.rv, point.shape=19, point.color=cols[pd_new$cluster[!is.na(pd_new$cluster)]])
+
 
 
 ###########
