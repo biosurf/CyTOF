@@ -124,6 +124,7 @@ for(c in 1:length(pregating_channels)) {
 }
 
 
+
 # Create two toy batches of bimodal densities (the cydar packages only takes lists of lists as input)
 batches <- list()
 x <- list()
@@ -139,6 +140,7 @@ batches[["Batch2"]] <- x
 # Plot the marker distributions
 plot(density(batches$Batch1$sample_Y), main="uncorrected samples", ylim=c(0,0.09))
 points(density(batches$Batch2$sample_Y), type="l", col="red")
+
 
 
 # Run the normalization
@@ -233,6 +235,7 @@ live <- singlets[singlets[,"Dead"] < right,]
 paste("Live intact singlets: ", round((nrow(live)/nrow(singlets))*100, digits=2), "%", sep="")
 
 
+
 for (i in fcs_files) {
   print(paste("Total recovery for ", i, ": ", round((nrow(live[live$sample==i,])/nrow(exprs_set_trans[exprs_set_trans$sample==i,]))*100, digits=2), "%", sep=""))
 }
@@ -259,10 +262,12 @@ table(duplicated(live[live$sample==fcs_files[1],lineage_channels]))
 live <- live[-which(duplicated(live[live$sample==fcs_files[1],lineage_channels]))]
 
 
+
 library(Rtsne)
 set.seed(42)
 tsne <- Rtsne(live[live$sample==fcs_files[1],lineage_channels])
 plot(tsne$Y[,1:2], pch=21, bg=alpha("slategray4",0.6), col="grey", xlab="", ylab="", lwd=0.5)
+
 
 
 par(mfrow=c(2,2))
@@ -282,16 +287,19 @@ library(cytofkit)
 clusters_pg <- cytof_cluster(xdata = live[live$sample==fcs_files[1],lineage_channels], method = "Rphenograph")
 
 
+
 # Visualize results on PCA
 getPalette = colorRampPalette(brewer.pal(9, "Set1"))
 cols <- getPalette(max(clusters_pg))
 plot(pca$x[,1:2], pch=21, bg=alpha(col=cols[clusters_pg],0.6), col="grey")
 
 
+
 # Visualize results on t-SNE plot
 getPalette = colorRampPalette(brewer.pal(9, "Set1"))
 cols <- getPalette(max(clusters_pg))
 plot(tsne$Y[,1:2], pch=21, bg=alpha(col=cols[clusters_pg],0.6), col="grey", xlab="", ylab="", lwd=0.5)
+
 
 
 # Sample 5000 random events from each sample
@@ -323,13 +331,14 @@ for(i in 1:4) {
 ##########################
 
 library(cytofkit)
-clusters_fc <- cytof_cluster(xdata = live[live$sample==fcs_files[1],lineage_channels], method = "FlowSOM", FlowSOM_k=25)
+clusters_fs <- cytof_cluster(xdata = live[live$sample==fcs_files[1],lineage_channels], method = "FlowSOM", FlowSOM_k=25)
+
 
 
 # Visualize results on t-SNE plot
 getPalette = colorRampPalette(brewer.pal(9, "Set1"))
-cols <- getPalette(max(clusters_fc))
-plot(tsne$Y[,1:2], pch=21, bg=alpha(col=cols[clusters_fc],0.6), col="grey", xlab="", ylab="", lwd=0.5)
+cols <- getPalette(max(clusters_fs))
+plot(tsne$Y[,1:2], pch=21, bg=alpha(col=cols[clusters_fs],0.6), col="grey", xlab="", ylab="", lwd=0.5)
 
 
 ################
@@ -361,15 +370,7 @@ for(i in 1:max(clusters)) {
 library(gplots)
 cols = colorRampPalette(c(brewer.pal(9, "Set1")[2], brewer.pal(9, "Set1")[1]))
 par(mar = c(2,2,2,2))
-heatmap.2(t(cluster_matrix), col=cols, trace="none", density.info = "none", sepcolor = "white", sepwidth = c(0.001, 0.001), colsep=c(1:ncol(t(cluster_matrix))), rowsep=c(1:nrow(t(cluster_matrix))), xlab="cluster", ylab="channel")
-
-
-# Load MEM library
-library(MEM)
-# Calculation of relative enrichment scores for each marker on each population using asinh transformation with co-factor 5
-MEM_scores = MEM(clustered_data, transform=TRUE, cofactor=5, choose.ref=FALSE, IQR_thresh=NULL)
-# Generation of heatmaps showing the marker profiles for each population - these are saved to files. 
-build.heatmaps(MEM_scores, cluster.MEM="both", cluster.medians="none", display.thresh=0, output.files=TRUE)
+heatmap.2(t(cluster_matrix), col=cols, trace="none", density.info = "none", sepcolor = "white", sepwidth = c(0.001, 0.001), colsep=c(1:ncol(t(cluster_matrix))), rowsep=c(1:nrow(t(cluster_matrix))), xlab="cluster", ylab="channel", scale="row")
 
 
 ##############
@@ -388,12 +389,117 @@ plot.new()
 legend("center", legend=paste("cluster", 1:max(clusters)), col=cols, cex=1, pch=16, bty='n')
 
 
+
 pop.rv <- do.radviz(cluster_matrix,cell.S)
 size <- table(clusters)
 layout(matrix(c(1,1,1,2), nrow=1,ncol=4))
 bubbleRadviz(pop.rv, bubble.color=alpha(cols[1:nrow(cluster_matrix)],0.8), bubble.size=log(size[1:nrow(cluster_matrix)]), scale=0.2, decreasing=TRUE)
 plot.new()
 legend("center", legend=paste("cluster", 1:max(clusters)), col=cols, cex=1, pch=16, bty='n')
+
+
+###################################################
+### Differential abundance of cells in clusters ###
+###################################################
+
+# Import data
+library(flowCore)
+setwd("~/Dropbox/Research/Papers/Ongoing/CyTOF primer/CyTOF_wiki/cancer_data/")
+fcs_files <- list.files(pattern='.fcs$', full=TRUE, ignore.case = TRUE)
+exprs_set <- data.frame()
+sample <- c()
+for(i in fcs_files) {
+  fcs <- read.FCS(filename=i, transformation=FALSE) 
+  exprs <- fcs@exprs
+  colnames(exprs) <- gsub(pattern = ".*_", replacement = "", x = as.vector(fcs@parameters@data$desc))
+  exprs <- asinh(exprs/5)
+  exprs_set <- rbind(exprs_set, exprs)
+  sample <- append(sample, rep(i, nrow(exprs)))
+}
+exprs_set$sample <- sample
+
+# Set channels
+pregating_channels <- c("DNA-1", "DNA-2")
+lineage_channels <- c("CD45", "CD4", "CD20", "CD33", "CD123", "CD14", "IgM", "HLA-DR", "CD7", "CD3")
+functional_channels <- c("pNFkB", "pp38", "pStat5", "pAkt", "pStat1", "pSHP2", "pZap70", "pStat3", "pSlp76", "pBtk", "pPlcg2", "pErk", "pLat", "pS6")
+instrument_channels <- c("length", "Time", "sample", "BC1", "BC2", "BC3", "BC4", "BC5", "BC6", "BC7")
+
+
+########################################
+### calculate differential abundance ###
+########################################
+
+# visualize on t-SNE
+library(Rtsne)
+library(RColorBrewer)
+library(scales)
+
+set.seed(42)
+tsne <- Rtsne(sub)
+
+# par(mfrow=c(1,2))
+layout(matrix(c(1,1,1,2,2,2,3), nrow=1,ncol=7))
+
+getPalette = colorRampPalette(brewer.pal(9, "Set1"))
+cols <- getPalette(max(clusters_pg))
+plot(tsne$Y, pch=21, bg=alpha(col=cols[clusters_pg],0.6), col="grey", xlab="", ylab="", lwd=0.5, main="Phenograph clusters")
+
+log2fc <- res$table$logFC
+log2fc[res$table$PValue>0.05] <- 0
+colpal <- colorRampPalette(c('red', "grey", 'blue'))
+cols <- colpal(100)[as.numeric(cut(log2fc,breaks = 100))]
+plot(tsne$Y, pch=21, bg=alpha(col=cols[clusters_pg],0.6), col="grey", xlab="", ylab="", lwd=0.5, main="colored by log2FC")
+
+legend_image <- as.raster(matrix(colpal(20), ncol=1))
+plot(c(0,2),c(0,1),type = 'n', axes = F,xlab = '', ylab = '', main = 'log2FC')
+text(x=1.5, y = seq(0,1,l=3), labels = c(round(min(log2fc), digits = 2),0,round(max(log2fc),digits=2)))
+rasterImage(legend_image, 0, 0, 1, 1)
+
+
+#############
+### cydar ###
+#############
+
+library(cydar)
+
+# Sample 1000 random events form each sample. cydar takes data as a list of matrices
+sub <- list()
+for(i in unique(exprs_set$sample)) {
+  temp <- exprs_set[exprs_set$sample==i,]
+  sub[[i]] <- temp[sample(nrow(temp), 1000, replace=FALSE),lineage_channels]
+}
+conditions <- rep(1, 16)
+conditions[grep("BCR-XL", fcs_files)] <- "BCR-XL"
+conditions[grep("Reference", fcs_files)] <- "Reference"
+sample.id <- rep(c(1:16), each=1000)
+
+# Counting cells into hyperspheres with a radius equal to 0.5 times the square root of the number of markers
+cd_all <- prepareCellData(sub)
+cd_all <- countCells(cd_all, tol=0.5)
+
+# Testing for significant differences in abundance
+library(edgeR)
+y <- DGEList(assay(cd_all), lib.size=cd_all$totals)
+
+keep <- aveLogCPM(y) >= aveLogCPM(5, mean(cd_all$totals))
+cd <- cd_all[keep,]
+y <- y[keep,]
+
+design <- model.matrix(~factor(conditions))
+y <- estimateDisp(y, design)
+fit <- glmQLFit(y, design, robust=TRUE)
+res <- glmQLFTest(fit, coef=2)
+
+# Controlling the spatial FDR
+qvals <- spatialFDR(intensities(cd), res$table$PValue)
+
+is.sig <- qvals <= 0.05
+summary(is.sig)
+
+sig.coords <- intensities(cd)[is.sig,]
+sig.res <- res$table[is.sig,]
+coords <- prcomp(sig.coords)
+plotCellLogFC(coords$x[,1], coords$x[,2], sig.res$logFC)
 
 
 ##############
@@ -457,6 +563,24 @@ results = citrus.full(
 plot(results,outputDirectory)
 
 
+##################################
+### Marker Enrichment Modeling ###
+##################################
+
+# Calculate enrichment scores
+mem <- MEM(cbind(live[live$sample==fcs_files[1],lineage_channels], cluster<-clusters_pg))
+mem <- round(mem[[5]][[1]])
+mem <- mem[order(as.numeric(rownames(mem))),]
+threshold <- 4
+labels <- list()
+for(i in 1:nrow(mem)) {
+  lab <- mem[i,abs(mem[i,])>threshold]
+  lab[lab>0] <- paste("+",lab[lab>0], sep="")
+  lab <- paste(names(lab), lab, sep="")
+  labels[[rownames(mem)[i]]] <- lab
+}
+
+
 ##############
 ### flowCL ###
 ##############
@@ -476,11 +600,30 @@ Res <- flowCL("CD16-CD14+CD33+")
 
 # Calculate and visualize self organizing map with the parameters used by FlowSOM
 library(kohonen)
-som <- som(as.matrix(live[live$sample==fcs_files[1],lineage]), grid=somgrid(xdim = 10, ydim = 10), dist.fcts="euclidean")
-plot(som, type="codes", codeRendering="segments")
+som <- som(as.matrix(live[live$sample==fcs_files[1],lineage_channels]), grid=somgrid(xdim = 10, ydim = 10), dist.fcts="euclidean")
 
-# Minimum spanning tree visualization
+# Calculate codebook clusters
+library(ConsensusClusterPlus)
+nclust <- 15
+cclust <- ConsensusClusterPlus(t(som$codes[[1]]), maxK = nclust, reps = 100, pItem = 0.9, pFeature = 1, title = tempdir(), plot = "pdf", verbose = FALSE, clusterAlg = "hc", distance = "euclidean", seed = NULL)
+codebook_clusters <- cclust[[nclust]]$consensusClass
+codebook_list <- list()
+for(i in 1:max(codebook_clusters)) {
+  codebook_list[[i]] <- names(codebook_clusters[codebook_clusters==i])
+}
+
+# Create minimum spanning tree from codebook distance matrix
 library(igraph)
 graph  <- graph.adjacency(as.matrix(dist(som$codes[[1]])), weighted = TRUE)
 mst <- mst(graph)
-plot(as.undirected(mst), vertex.size=10, mode="undirected")
+
+# Plot flowSOM-like MST output
+layout <- layout.kamada.kawai(as.undirected(mst))
+marker_palette = colorRampPalette(brewer.pal(9, "Set1"))
+cluster_palette = colorRampPalette(brewer.pal(8, "Set2"))
+marker_cols <- palette(length(lineage_channels))
+cluster_cols <- palette(max(codebook_clusters))
+medians <- t(apply(som$codes[[1]], 1, function(x) x/sum(x)))
+plot(as.undirected(mst), vertex.shape="star", vertex.label = NA, vertex.size = rep(10, 100), vertex.data = medians, vertex.cP = marker_palette(ncol(medians)), vertex.scale = TRUE, layout = layout, edge.lty = 1, mark.groups = codebook_list, mark.col = alpha(cluster_cols,0.4), mark.border = NA, mark.shape=1)
+legend(x=1.2,y=1.1,legend=lineage_channels, col=marker_cols, pch=19, cex=0.7, bty="n", y.intersp=0.8)
+legend(x=-1.8,y=1.1,legend=paste("cluster", 1:15), col=cluster_cols, pch=19, cex=0.7, bty="n", y.intersp=0.8)
